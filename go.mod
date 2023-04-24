@@ -1,4 +1,4 @@
-module middleware
+module github.com/Blocked233/middleware
 
 go 1.20
 
