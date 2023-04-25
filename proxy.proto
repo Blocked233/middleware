@@ -1,0 +1,11 @@
+syntax="proto3";
+option go_package = "./proto";
+
+message TunByte{
+    bytes data=1;
+}
+
+service Message{
+    rpc Tun(stream TunByte) returns(stream TunByte);
+}
+//protoc --go_out=./ --go-grpc_out=./ *.proto
