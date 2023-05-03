@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"sync"
 
 	"github.com/Blocked233/middleware/proto"
 
@@ -14,12 +13,6 @@ import (
 
 var (
 	GrpcServer *grpc.Server
-
-	tunBytesPool = sync.Pool{
-		New: func() interface{} {
-			return &proto.TunByte{}
-		},
-	}
 
 	trojanPasswordLenth = 56
 	crlf                = []byte{'\r', '\n'}
@@ -40,7 +33,7 @@ func (h MessageService) Tun(stream proto.Message_TunServer) error {
 
 	defer stream.Context().Done()
 
-	rcvBytes := tunBytesPool.New().(*proto.TunByte)
+	rcvBytes := tunBytesPool.Get().(*proto.TunByte)
 	defer tunBytesPool.Put(rcvBytes)
 
 	//First data

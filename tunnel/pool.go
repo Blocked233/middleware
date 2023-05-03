@@ -3,7 +3,7 @@ package tunnel
 import (
 	"sync"
 
-	"github.com/panjf2000/ants/v2"
+	"github.com/Blocked233/middleware/proto"
 )
 
 type byteReuse struct {
@@ -16,5 +16,10 @@ var (
 			return &byteReuse{buf: make([]byte, 1500)}
 		},
 	}
-	webPool *ants.PoolWithFunc
+
+	tunBytesPool = sync.Pool{
+		New: func() interface{} {
+			return &proto.TunByte{}
+		},
+	}
 )
