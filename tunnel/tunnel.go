@@ -99,6 +99,8 @@ func stdtcpProcess(stream proto.Message_TunServer, addr Addr, rcvBytes *proto.Tu
 			if err != nil {
 				return
 			}
+
+			buf.Reset()
 		}
 	}()
 
@@ -162,7 +164,7 @@ func stdudpProcess(stream proto.Message_TunServer, addr Addr, rcvBytes *proto.Tu
 		defer tunBytesPool.Put(sendBytes)
 
 		for {
-
+			payload.Reset()
 			n, udpAddr, err := udpListen.ReadFromUDP(payload.B)
 			if err != nil {
 				return
