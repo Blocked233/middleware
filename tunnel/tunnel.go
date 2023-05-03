@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/Blocked233/middleware/proto"
+	"github.com/valyala/bytebufferpool"
 
 	"google.golang.org/grpc"
 )
@@ -73,25 +74,26 @@ func stdtcpProcess(stream proto.Message_TunServer, addr Addr, rcvBytes *proto.Tu
 	// client <-- destination
 
 	go func() {
-		buf := bufferPool.Get().(*byteReuse)
-		defer bufferPool.Put(buf)
+		buf := bytebufferpool.Get()
+		defer bytebufferpool.Put(buf)
 
 		sendBytes := tunBytesPool.Get().(*proto.TunByte)
 		defer tunBytesPool.Put(sendBytes)
 
 		for {
-
-			n, err := conn.Read(buf.buf)
+			_, err := io.Copy(buf, conn)
 			if err != nil {
 				return
 			}
 
-			sendBytes.Data = buf.buf[:n]
+			sendBytes.Data = buf.Bytes()
 
 			err = stream.Send(sendBytes)
 			if err != nil {
 				return
 			}
+
+			buf.Reset()
 		}
 	}()
 
@@ -145,36 +147,36 @@ func stdudpProcess(stream proto.Message_TunServer, addr Addr, rcvBytes *proto.Tu
 
 	go func() {
 
-		udpHeaderBuf := bufferPool.Get().(*byteReuse)
-		defer bufferPool.Put(udpHeaderBuf)
+		udpHeaderBuf := bytebufferpool.Get()
+		defer bytebufferpool.Put(udpHeaderBuf)
 
-		payload := bufferPool.Get().(*byteReuse)
-		defer bufferPool.Put(payload)
+		payload := bytebufferpool.Get()
+		defer bytebufferpool.Put(payload)
 
 		sendBytes := tunBytesPool.Get().(*proto.TunByte)
 		defer tunBytesPool.Put(sendBytes)
 
 		for {
-
-			n, udpAddr, err := udpListen.ReadFromUDP(payload.buf)
+			payload.Reset()
+			n, udpAddr, err := udpListen.ReadFromUDP(payload.B)
 			if err != nil {
 				return
 			}
 
 			// Protocol: addr len(payload) crlf payload
-			udpHeaderBuf.buf = udpHeaderBuf.buf[:0]
+			udpHeaderBuf.Reset()
 
 			if udpAddr.IP.Equal(firstUdpAddr.IP) && udpAddr.Port == firstUdpAddr.Port {
-				udpHeaderBuf.buf = append(udpHeaderBuf.buf, firstRecvAddr...)
+				udpHeaderBuf.Write(firstRecvAddr)
 			} else {
-				udpHeaderBuf.buf = append(udpHeaderBuf.buf, ParseAddrToSocksAddr(udpAddr)...)
+				udpHeaderBuf.Write(ParseAddrToSocksAddr(udpAddr))
 			}
 
-			udpHeaderBuf.buf = binary.BigEndian.AppendUint16(udpHeaderBuf.buf, uint16(n))
-			udpHeaderBuf.buf = append(udpHeaderBuf.buf, crlf...)
-			udpHeaderBuf.buf = append(udpHeaderBuf.buf, payload.buf[:n]...)
+			udpHeaderBuf.B = binary.BigEndian.AppendUint16(udpHeaderBuf.B, uint16(n))
+			udpHeaderBuf.Write(crlf)
+			udpHeaderBuf.Write(payload.B[:n])
 
-			sendBytes.Data = udpHeaderBuf.buf
+			sendBytes.Data = udpHeaderBuf.Bytes()
 
 			err = stream.Send(sendBytes)
 			if err != nil {
