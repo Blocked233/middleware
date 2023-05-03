@@ -7,10 +7,13 @@ require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/panjf2000/ants/v2 v2.7.3
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/crypto v0.5.0
-	golang.org/x/net v0.8.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.28.1
+)
+
+require (
+	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 )
 
 require (
@@ -33,6 +36,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
+	github.com/valyala/bytebufferpool v1.0.0
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
